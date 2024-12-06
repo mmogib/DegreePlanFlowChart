@@ -107,6 +107,17 @@ function theme_colors()
     )
 end
 
+function course_types_name(tp::Symbol)
+    type_names = Dict(
+        :DF => "Digital/Business foundation",
+        :GS => "General Studies",
+        :MS => "Math and Science",
+        :CR => "Core Requirements",
+        :CE => "Major Electives",
+        :TE => "Technical Electives"
+    )
+    type_names[tp]
+end
 
 function draw_summer_chart(pdf::Bool, is_summer::Bool=true, term_field::Symbol=:Term)
     if pdf
@@ -121,51 +132,6 @@ function draw_summer_chart(pdf::Bool, is_summer::Bool=true, term_field::Symbol=:
 end
 
 
-# function semester_lane(x, y, w, h)
-#     sethue(clrs[:sem_title])
-#     credits = sum(map(x -> x[2], courses))
-#     # green title background
-#     box(Point(x, y - h / 2 + 20), w, 40, action=:fill)
-#     sethue("white")
-#     fontsize(14)
-#     text(title, Point(x, y - h / 2 + 20), halign=:center, valign=:middle)
-
-#     sethue("black")
-#     fontsize(12)
-#     text("$credits cr.", Point(x, y - h / 2 + 50), halign=:center, valign=:middle)
-
-#     # lane
-#     sethue(clrs[:sem_border])
-#     setline(0.7)
-#     line(Point(x - w / 2, y - h / 2 + 60), Point(x + w / 2, y - h / 2 + 60), action=:stroke)
-#     setline(0.5)
-#     box(Point(x, y), w, h, action=:stroke)
-
-
-#     setline(1)
-#     for (i, course) in enumerate(courses)
-#         code, cr = course
-#         sethue(colorant"#f8cbad")
-#         pt = Point(x, y - h / 2 + 100 + (i - 1) * 70)
-#         polysmooth(box(pt, w - 15, 50, vertices=true), 0.2, action=:fill)
-#         sethue("black")
-#         fontsize(14)
-#         fontface("Rotis SansSerif Std")
-#         text(code, Point(pt.x, pt.y - 10), halign=:center, valign=:middle)
-#         fontsize(12)
-#         text("$cr", Point(pt.x + 20, pt.y + 20), halign=:bottom, valign=:right)
-#         sethue(clrs[:sem_border])
-#         polysmooth(box(pt, w - 15, 50, vertices=true), 0.2, action=:stroke)
-#     end
-
-#     sethue(clrs[:primary])
-#     setline(2)
-#     fontsize(16)
-#     fontface("Liberation Sans")
-
-
-# end
-# x, y, lane_width, lane_height
 function semester_lane(x, y, w, h, clrs=theme_colors(), title="", courses=[], all_crs=[])
     sethue(clrs[:sem_title])
     credits = sum(map(x -> x[2], courses))
@@ -186,40 +152,117 @@ function semester_lane(x, y, w, h, clrs=theme_colors(), title="", courses=[], al
     setline(0.5)
     box(Point(x, y), w, h, action=:stroke)
 
-
-    # setline(1)
-    # for (i, course) in enumerate(courses)
-    #     code, cr = course
-    #     course_tile = filter(x -> x.code == code, all_crs)[1]
-    #     sethue(colorant"#f8cbad")
-    #     pt = Point(x, y - h / 2 + 100 + (i - 1) * 70)
-    #     println(code, "==", course_tile.code, ":::", pt.x, " ==? tile =", course_tile.x, ":::", pt.y, " ===? tile", course_tile.y)
-    #     polysmooth(box(pt, w - 15, 50, vertices=true), 0.2, action=:fill)
-    #     sethue("black")
-    #     fontsize(14)
-    #     fontface("Rotis SansSerif Std")
-    #     text(code, Point(pt.x, pt.y - 10), halign=:center, valign=:middle)
-    #     fontsize(12)
-    #     text("$cr", Point(pt.x + 20, pt.y + 20), halign=:bottom, valign=:right)
-    #     sethue(clrs[:sem_border])
-    #     polysmooth(box(pt, w - 15, 50, vertices=true), 0.2, action=:stroke)
-    # end
-    # setline(1)
-    # for (i, course) in enumerate(all_courses)
-    #     sethue(course.c)
-    #     pt = Point(course.x, course.y)
-    #     polysmooth(box(pt, course.w, course.h, vertices=true), 0.2, action=:fill)
-    #     sethue("black")
-    #     fontsize(14)
-    #     fontface("Rotis SansSerif Std")
-    #     text(course.code, Point(pt.x, pt.y - 10), halign=:center, valign=:middle)
-    #     fontsize(12)
-    #     text("$(course.credits)", Point(pt.x + 20, pt.y + 20), halign=:bottom, valign=:right)
-    #     sethue(clrs[:sem_border])
-    #     polysmooth(box(pt, course.w, course.h, vertices=true), 0.2, action=:stroke)
-    # end
     sethue(clrs[:primary])
     setline(2)
     fontsize(16)
     fontface("Liberation Sans")
 end
+
+
+function get_fork_points(num_courses)
+    used_corners = Vector{TileEdgePoint}(undef, 12 * num_courses)
+    used_ys = Vector{Union{Nothing,Number}}(nothing, 12 * num_courses)
+    used_xs = Vector{Union{Nothing,Number}}(nothing, 12 * num_courses)
+    used_corners = repeat([TileEdgePoint(0, 0, 1, false)], 12 * num_courses)
+    used_counter = 1
+    top_right_increments = [14, 8, 6]
+    bottom_right_increments = [10, 12, 14]
+    Dict(
+        :DownToUp => function (course, pre_req_c)
+            tr_free = filter(x -> !(x in used_corners), pre_req_c.TRPoints)[1]
+            tr_order = tr_free.order
+            bl_free = filter(x -> !(x in used_corners), course.BLPoints)[1]
+
+            bl_order = bl_free.order
+            used_corners[used_counter] = tr_free
+            used_counter += 1
+            used_corners[used_counter] = bl_free
+            used_counter += 1
+            p1 = Point(tr_free.x, tr_free.y)
+            next_indx = count(x -> !isnothing(x), used_ys)
+            y_level = p1.y - top_right_increments[tr_order]
+            y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
+            y_l = if isnothing(y_level_indx)
+                y_level
+            else
+                y_level - 10
+            end
+            used_ys[next_indx+1] = y_l
+
+            p2 = Point(p1.x + 10, y_l)
+            next_indx = count(x -> !isnothing(x), used_xs)
+            x_level = course.x - course.w / 2 - 10
+            x_level_indx = findlast(x -> !isnothing(x) && x_level + 6 >= x >= x_level, used_xs)
+            x_l = if isnothing(x_level_indx)
+                x_level
+            else
+                used_xs[x_level_indx] + 2
+            end
+            used_xs[next_indx+1] = x_l
+            p3 = Point(x_l, p2.y)
+
+            p4 = Point(x_l, course.y + course.h / 2 + top_right_increments[bl_order])
+            p5 = Point(bl_free.x, bl_free.y)
+            p1, p2, p3, p4, p5
+        end,
+        :SameLevel => function (course, pre_req_c)
+            tr_free = filter(x -> !(x in used_corners), pre_req_c.TRPoints)[1]
+            tr_order = tr_free.order
+            tl_free = filter(x -> !(x in used_corners), course.TLPoints)[1]
+            tl_order = tl_free.order
+            used_corners[used_counter] = tr_free
+            used_counter += 1
+            used_corners[used_counter] = tl_free
+            used_counter += 1
+            p1 = Point(tr_free.x, tr_free.y)
+            next_indx = count(x -> !isnothing(x), used_ys)
+            y_level = p1.y - top_right_increments[tr_order]
+            y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
+            y_l = if isnothing(y_level_indx)
+                y_level
+            else
+                y_level - 10
+            end
+            used_ys[next_indx+1] = y_l
+            p2 = Point(p1.x + 10, y_l)
+            p3 = Point(course.x - course.w / 2 - 10, p2.y)
+            p4 = Point(tl_free.x, tl_free.y)
+            p1, p2, p3, p4
+        end,
+        :UpToDown => function (course, pre_req_c)
+            br_free = filter(x -> !(x in used_corners), pre_req_c.BRPoints)[1]
+            br_order = br_free.order
+            tl_free = filter(x -> !(x in used_corners), course.TLPoints)[1]
+            tl_order = tl_free.order
+            used_corners[used_counter] = br_free
+            used_counter += 1
+            used_corners[used_counter] = tl_free
+            used_counter += 1
+            p1 = Point(br_free.x, br_free.y)
+            next_indx = count(x -> !isnothing(x), used_ys)
+            y_level = p1.y + bottom_right_increments[br_order]
+            y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
+            y_l = if isnothing(y_level_indx)
+                y_level
+            else
+                y_level + 10
+            end
+            used_ys[next_indx+1] = y_l
+            p2 = Point(p1.x + 10, y_l)
+            next_indx = count(x -> !isnothing(x), used_xs)
+            x_level = course.x - course.w / 2 - 10
+            x_level_indx = findlast(x -> !isnothing(x) && x_level + 6 >= x >= x_level, used_xs)
+            x_l = if isnothing(x_level_indx)
+                x_level
+            else
+                used_xs[x_level_indx] + 2
+            end
+            used_xs[next_indx+1] = x_l
+            p3 = Point(x_l, p2.y)
+            p4 = Point(p3.x, course.y - course.h / 2 - bottom_right_increments[tl_order])
+            p5 = Point(tl_free.x, tl_free.y)
+            p1, p2, p3, p4, p5
+        end
+    )
+end
+

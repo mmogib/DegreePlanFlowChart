@@ -1,111 +1,6 @@
 include("includes.jl")
 
-function get_fork_points(num_courses)
-    used_corners = Vector{TileEdgePoint}(undef, 12 * num_courses)
-    used_ys = Vector{Union{Nothing,Number}}(nothing, 12 * num_courses)
-    used_xs = Vector{Union{Nothing,Number}}(nothing, 12 * num_courses)
-    used_corners = repeat([TileEdgePoint(0, 0, 1, false)], 12 * num_courses)
-    used_counter = 1
-    top_right_increments = [14, 8, 6]
-    bottom_right_increments = [10, 12, 14]
-    Dict(
-        :DownToUp => function (course, pre_req_c)
-            tr_free = filter(x -> !(x in used_corners), pre_req_c.TRPoints)[1]
-            tr_order = tr_free.order
-            bl_free = filter(x -> !(x in used_corners), course.BLPoints)[1]
 
-            bl_order = bl_free.order
-            used_corners[used_counter] = tr_free
-            used_counter += 1
-            used_corners[used_counter] = bl_free
-            used_counter += 1
-            p1 = Point(tr_free.x, tr_free.y)
-            next_indx = count(x -> !isnothing(x), used_ys)
-            y_level = p1.y - top_right_increments[tr_order]
-            y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
-            y_l = if isnothing(y_level_indx)
-                y_level
-            else
-                y_level - 10
-            end
-            used_ys[next_indx+1] = y_l
-
-            p2 = Point(p1.x + 10, y_l)
-            next_indx = count(x -> !isnothing(x), used_xs)
-            x_level = course.x - course.w / 2 - 10
-            x_level_indx = findlast(x -> !isnothing(x) && x_level + 6 >= x >= x_level, used_xs)
-            x_l = if isnothing(x_level_indx)
-                x_level
-            else
-                used_xs[x_level_indx] + 2
-            end
-            used_xs[next_indx+1] = x_l
-            p3 = Point(x_l, p2.y)
-
-            p4 = Point(x_l, course.y + course.h / 2 + top_right_increments[bl_order])
-            p5 = Point(bl_free.x, bl_free.y)
-            p1, p2, p3, p4, p5
-        end,
-        :SameLevel => function (course, pre_req_c)
-            tr_free = filter(x -> !(x in used_corners), pre_req_c.TRPoints)[1]
-            tr_order = tr_free.order
-            tl_free = filter(x -> !(x in used_corners), course.TLPoints)[1]
-            tl_order = tl_free.order
-            used_corners[used_counter] = tr_free
-            used_counter += 1
-            used_corners[used_counter] = tl_free
-            used_counter += 1
-            p1 = Point(tr_free.x, tr_free.y)
-            next_indx = count(x -> !isnothing(x), used_ys)
-            y_level = p1.y - top_right_increments[tr_order]
-            y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
-            y_l = if isnothing(y_level_indx)
-                y_level
-            else
-                y_level - 10
-            end
-            used_ys[next_indx+1] = y_l
-            p2 = Point(p1.x + 10, y_l)
-            p3 = Point(course.x - course.w / 2 - 10, p2.y)
-            p4 = Point(tl_free.x, tl_free.y)
-            p1, p2, p3, p4
-        end,
-        :UpToDown => function (course, pre_req_c)
-            br_free = filter(x -> !(x in used_corners), pre_req_c.BRPoints)[1]
-            br_order = br_free.order
-            tl_free = filter(x -> !(x in used_corners), course.TLPoints)[1]
-            tl_order = tl_free.order
-            used_corners[used_counter] = br_free
-            used_counter += 1
-            used_corners[used_counter] = tl_free
-            used_counter += 1
-            p1 = Point(br_free.x, br_free.y)
-            next_indx = count(x -> !isnothing(x), used_ys)
-            y_level = p1.y + bottom_right_increments[br_order]
-            y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
-            y_l = if isnothing(y_level_indx)
-                y_level
-            else
-                y_level + 10
-            end
-            used_ys[next_indx+1] = y_l
-            p2 = Point(p1.x + 10, y_l)
-            next_indx = count(x -> !isnothing(x), used_xs)
-            x_level = course.x - course.w / 2 - 10
-            x_level_indx = findlast(x -> !isnothing(x) && x_level + 6 >= x >= x_level, used_xs)
-            x_l = if isnothing(x_level_indx)
-                x_level
-            else
-                used_xs[x_level_indx] + 2
-            end
-            used_xs[next_indx+1] = x_l
-            p3 = Point(x_l, p2.y)
-            p4 = Point(p3.x, course.y - course.h / 2 - bottom_right_increments[tl_order])
-            p5 = Point(tl_free.x, tl_free.y)
-            p1, p2, p3, p4, p5
-        end
-    )
-end
 
 function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true, term_field::Symbol=:Term)
     clrs = theme_colors()
@@ -114,6 +9,10 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     else
         Drawing("A4landscape", filename)
     end
+    df = getDSECourses(is_summer)
+    all_courses = coursesToTiles(df, d, term_field)
+    all_courses = addPreRequesites(df, all_courses)
+    course_types = unique(df[!, :Type])
     origin()
     w, h = d.width, d.height
     background("white")
@@ -126,16 +25,27 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     circle(Point(0, d.height / 2), 4, action=:fill)
     box(BoundingBox(), action=:stroke)
     sethue("black")
-    text("Legend:     J = Junior Standing ", Point(-w / 2 + 100, (h / 2) - 5), halign=:left, valign=:middle)
+    legend_point = Point(-w / 2 + 20, (h / 2) - 10)
+    text("Legend: J = Junior Standing ", legend_point, halign=:left, valign=:middle)
+    legend_point = Point(-w / 2 + 60, (h / 2) - 10)
+    type_text_length = 120
+    l_p = Point(legend_point.x + type_text_length, legend_point.y)
+    fontsize(8)
+    grid = GridRect(l_p, 110, 0)
+    for course_type_str in course_types
+        course_type_sym = Symbol(course_type_str)
+        type_text = course_types_name(course_type_sym)
+        type_text_length = length(type_text) + 95
+        sethue(clrs[course_type_sym])
+        l_p = nextgridpoint(grid)
+        circle(l_p, 6, action=:fill)
+        sethue("black")
+        text(type_text, Point(l_p.x + 5, l_p.y), halign=:left, valign=:middle)
+
+    end
     sethue("green")
-    d
     h = h - 20
-    df = getDSECourses(is_summer)
-    all_courses = coursesToTiles(df, d, term_field)
-    all_courses = addPreRequesites(df, all_courses)
     banner_center = Point(0, -h / 2 + 40)
-    # top_left = Point(-w / 2, -h / 2)
-    # center_left = Point(-w / 2, 20)
     box(banner_center, w - 20, 50, action=:fill)
     sethue("white")
     fontsize(15)
@@ -146,12 +56,11 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     y = 40
     lane_width = 80
     lane_height = h - 100
-    # box(center_left + pnt, 80, h - 100, action=:stroke)
     x_inc = 80
     x = -w / 2 - 10 + x_inc
     sem_gap = 5
     year_gap = 10
-    # sem_color = clrs[:sem_border]
+
     # year 1
     t1_crs = map(x -> (x[1], x[2]), eachrow(df[df[!, term_field].==1, [:Course, :Cr]]))
     text("Freshman Year", Point(x + 40, y - h / 2 + 35), halign=:center, valign=:middle)
@@ -201,7 +110,6 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
 
     sethue("green")
 
-    setline(1.5)
 
     term_counter = is_summer ?
                    Dict("1.0" => 1, "2.0" => 2, "3.0" => 3, "4.0" => 4, "5.0" => 5, "6.0" => 6, "6.5" => 7, "7.0" => 8, "8.0" => 9) :
@@ -212,21 +120,18 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     up_to_down = pre_arrows_fns[:UpToDown]
     connector_colors = [
         RGB(0.8, 0.2, 0.0),  # Dark Red
-        # RGB(0.5, 0.6, 0.0),  # Dark Brick
-        # RGB(0.5, 0.2, 0.0),  # Dark Burnt Orange
-        # RGB(0.6, 0.3, 0.0),  # Dark Amber
         RGB(0.2, 0.0, 0.8),  # Dark Golden Orange
-        # RGB(0.6, 0.3, 0.2),  # Dark Terra Cotta
         RGB(0.8, 0.0, 0.2),  # Dark Red Violet
-        # RGB(0.6, 0.1, 0.2),  # Dark Rose
-        # RGB(0.7, 0.0, 0.1),  # Dark Crimson
-        # RGB(0.5, 0.0, 0.0),  # Dark Scarlet
         RGB(0.2, 0.0, 0.8)   # Dark Burgundy
     ]
 
+    connector_lengths = [0.9, 1.2, 0.9, 1.2]
+
     for course in all_courses
-        clor_indx = 1 + (term_counter["$(course.term)"] % 4)
-        clr = connector_colors[clor_indx]
+        connector_indx = 1 + (term_counter["$(course.term)"] % 4)
+        clr = connector_colors[connector_indx]
+        lngth = connector_lengths[connector_indx]
+        setline(lngth)
         sethue(clr)
         if !isnothing(course.prereqs)
             ending_term = course.term
@@ -241,107 +146,38 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
                 else
                     if ending_order < starting_order # the ones that prererquisites are above them
                         p1, p2, p3, p4, p5 = down_to_up(course, pre_req_c)
-
-                        # tr_free = filter(x -> !(x in used_corners), pre_req_c.TRPoints)[1]
-                        # tr_order = tr_free.order
-                        # bl_free = filter(x -> !(x in used_corners), course.BLPoints)[1]
-                        # p1, p2, p3, p4, p5, used_corners, used_counter, used_xs, used_ys = up_to_down(course, pre_req_c, used_corners, used_counter, used_xs, used_ys)
-                        # bl_order = bl_free.order
-                        # used_corners[used_counter] = tr_free
-                        # used_counter += 1
-                        # used_corners[used_counter] = bl_free
-                        # used_counter += 1
-                        # p1 = Point(tr_free.x, tr_free.y)
-                        # next_indx = count(x -> !isnothing(x), used_ys)
-                        # y_level = p1.y - top_right_increments[tr_order]
-                        # y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
-                        # y_l = if isnothing(y_level_indx)
-                        #     y_level
-                        # else
-                        #     y_level - 10
-                        # end
-                        # used_ys[next_indx+1] = y_l
-
-                        # p2 = Point(p1.x + 10, y_l)
+                        y_distance_p3_to_p4 = p3.y - p4.y
                         line(p1, p2, action=:stroke)
-
-                        # next_indx = count(x -> !isnothing(x), used_xs)
-                        # x_level = course.x - course.w / 2 - 10
-                        # x_level_indx = findlast(x -> !isnothing(x) && x_level + 6 >= x >= x_level, used_xs)
-                        # x_l = if isnothing(x_level_indx)
-                        #     println(course.code)
-                        #     println(next_indx)
-                        #     x_level
-                        # else
-                        #     used_xs[x_level_indx] + 2
-                        # end
-                        # used_xs[next_indx+1] = x_l
-                        # p3 = Point(x_l, p2.y)
                         line(p2, p3, action=:stroke)
+                        if y_distance_p3_to_p4 < 50
+                            arrow(p3, p5)
+                        else
+                            line(p3, p4, action=:stroke)
+                            arrow(p4, p5)
+                        end
 
-                        # p4 = Point(x_l, course.y + course.h / 2 + top_right_increments[bl_order])
-                        line(p3, p4, action=:stroke)
-                        # p5 = Point(bl_free.x, bl_free.y)
-                        arrow(p4, p5)
                     elseif ending_order == starting_order
                         p1, p2, p3, p4 = same_level(course, pre_req_c)
-                        # tr_free = filter(x -> !(x in used_corners), pre_req_c.TRPoints)[1]
-                        # tr_order = tr_free.order
-                        # tl_free = filter(x -> !(x in used_corners), course.TLPoints)[1]
-                        # tl_order = tl_free.order
-                        # used_corners[used_counter] = tr_free
-                        # used_counter += 1
-                        # used_corners[used_counter] = tl_free
-                        # used_counter += 1
-                        # p1 = Point(tr_free.x, tr_free.y)
-                        # next_indx = count(x -> !isnothing(x), used_ys)
-                        # y_level = p1.y - top_right_increments[tr_order]
-                        # y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
-                        # y_l = if isnothing(y_level_indx)
-                        #     y_level
-                        # else
-                        #     y_level - 10
-                        # end
-                        # used_ys[next_indx+1] = y_l
-                        # p2 = Point(p1.x + 10, y_l)
                         line(p1, p2, action=:stroke)
-                        # p3 = Point(course.x - course.w / 2 - 10, p2.y)
                         line(p2, p3, action=:stroke)
-                        # p4 = Point(tl_free.x, tl_free.y)
                         arrow(p3, p4)
                     else
                         p1, p2, p3, p4, p5 = up_to_down(course, pre_req_c)
-                        # br_free = filter(x -> !(x in used_corners), pre_req_c.BRPoints)[1]
-                        # br_order = br_free.order
-                        # tl_free = filter(x -> !(x in used_corners), course.TLPoints)[1]
-                        # tl_order = tl_free.order
-                        # used_corners[used_counter] = br_free
-                        # used_counter += 1
-                        # used_corners[used_counter] = tl_free
-                        # used_counter += 1
-                        # p1 = Point(br_free.x, br_free.y)
-                        # next_indx = count(x -> !isnothing(x), used_ys)
-                        # y_level = p1.y + bottom_right_increments[br_order]
-                        # y_level_indx = findfirst(x -> !isnothing(x) && x == y_level, used_ys)
-                        # y_l = if isnothing(y_level_indx)
-                        #     y_level
-                        # else
-                        #     y_level + 10
-                        # end
-                        # used_ys[next_indx+1] = y_l
-                        # p2 = Point(p1.x + 10, y_l)
+                        y_distance_p3_to_p4 = p4.y - p3.y
                         line(p1, p2, action=:stroke)
-                        # p3 = Point(course.x - course.w / 2 - 10, p2.y)
                         line(p2, p3, action=:stroke)
-                        # p4 = Point(p3.x, course.y - course.h / 2 - bottom_right_increments[tl_order])
-                        line(p3, p4, action=:stroke)
-                        # p5 = Point(tl_free.x, tl_free.y)
-                        arrow(p4, p5)
+                        if y_distance_p3_to_p4 < 50
+                            arrow(p3, p5)
+                        else
+                            line(p3, p4, action=:stroke)
+                            arrow(p4, p5)
+                        end
                     end
 
                 end
             end
         end
+        setline(1.5)
         sethue(course.c)
         pt = Point(course.x, course.y)
         # draw_course_tile(course, pt)
@@ -356,6 +192,7 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
         course.Note !== "" && text("($(course.Note))", Point(pt.x, pt.y + 5), halign=:center, valign=:middle)
         text(course.code, Point(pt.x, pt.y - 10), halign=:center, valign=:middle)
         fontsize(12)
+        circle(Point(pt.x + 20, pt.y + 15), 15, action=:stroke)
         text("$(course.credits)", Point(pt.x + 20, pt.y + 15), halign=:bottom, valign=:right)
         sethue(clrs[:sem_border])
         polysmooth(box(pt, course.w, course.h, vertices=true), 0.2, action=:stroke)
@@ -374,4 +211,4 @@ end
 
 
 
-draw_summer_chart(false, true, :Term)
+draw_summer_chart(true, true, :Term)
