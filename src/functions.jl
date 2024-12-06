@@ -53,17 +53,25 @@ function addPreRequesites(df::DataFrame, courses::Vector{CourseTile})
 
 end
 
-function coursesToTiles(df::DataFrame, canvas::Drawing, term_feild::Symbol=:Term)
+function coursesToTiles(df::DataFrame, canvas::Drawing, dp_canvas::DPCanvas, term_feild::Symbol=:Term)
     canvas_w, canvas_h = canvas.width, canvas.height
     type_colors = theme_colors()
-    x_inc = 80
-    base_y = 40
-    tile_w = 80
-    tile_h = 35
+    x_inc = dp_canvas.x_inc
+    # x_inc = 80
+    base_y = dp_canvas.y
+    # base_y = 40
+    # tile_w = 80
+    tile_w = dp_canvas.lane_width
+    sem_gap = dp_canvas.sem_gap
+    # sem_gap = 5
+    year_gap = dp_canvas.year_gap
+    # year_gap = 10
     h = canvas_h - 100
     lane_x = -canvas_w / 2 - 10 + x_inc
-    sem_gap = 5
-    year_gap = 10
+    tile_h = dp_canvas.tile_h
+    # tile_h = 35
+    tile_sep = dp_canvas.tile_separator
+    # tile_sep = 70
     year_terms = term_feild == :Term ? Dict(1 => [1, 2], 2 => [3, 4], 3 => [5, 6], 4 => ["s"], 5 => [7, 8]) :
                  Dict(1 => [1, 2], 2 => [3, 4], 3 => [5, 6], 4 => [7, 8])
     all_crs = map(1:length(keys(year_terms))) do yr
@@ -80,10 +88,10 @@ function coursesToTiles(df::DataFrame, canvas::Drawing, term_feild::Symbol=:Term
                     Float64(c_term)
                 end
                 type_clr = type_colors[Symbol(type)]
-                ytemp = y - (h / 2) + 100 + (i - 1) * 70
+                ytemp = y - (h / 2) + 100 + (i - 1) * tile_sep
                 CourseTile(code, type, cr, c_term, c_pretile, c_note, c_notes, i, lane_x, ytemp, tile_w - 15, tile_h, type_clr)
             end
-            lane_x = yr == 4 || term_i == 2 ? lane_x : lane_x + x_inc + sem_gap
+            lane_x = (term_feild == :Term && yr == 4) || term_i == 2 ? lane_x : lane_x + x_inc + sem_gap
             vcat(term_courses...)
         end
         lane_x = lane_x + x_inc + year_gap
@@ -119,7 +127,8 @@ function course_types_name(tp::Symbol)
     type_names[tp]
 end
 
-function draw_summer_chart(pdf::Bool, is_summer::Bool=true, term_field::Symbol=:Term)
+function draw_summer_chart(pdf::Bool, is_summer::Bool=true)
+    term_field = is_summer ? :Term : :INTERN_Term
     if pdf
         @pdf begin
             draw_summer_chart("./flow-charts/FlowChart.pdf", is_summer, term_field)
@@ -264,5 +273,38 @@ function get_fork_points(num_courses)
             p1, p2, p3, p4, p5
         end
     )
+end
+
+
+
+function draw_banner(total_credits::Number, w::Number, h::Number, is_summer::Bool)
+    banner_center = Point(0, -h / 2 + 40)
+    box(banner_center, w - 20, 50, action=:fill)
+    sethue("white")
+    fontsize(15)
+    fontface("Liberation Sans")
+    title = is_summer ? "SUMMER TRAINING" : "INTERNSHIP"
+    text("DATA SCIENCE AND ENGINEERING (DSE) $title PRE-REQUISITES CHART ($total_credits CREDIT HOURS)", banner_center, halign=:center, valign=:middle)
+end
+function draw_legends(course_types::Vector{String}, w::Number, h::Number)
+    clrs = theme_colors()
+    legend_point = Point(-w / 2 + 20, (h / 2) - 10)
+    text("Legend: J = Junior Standing ", legend_point, halign=:left, valign=:middle)
+    legend_point = Point(-w / 2 + 60, (h / 2) - 10)
+    type_text_length = 120
+    l_p = Point(legend_point.x + type_text_length, legend_point.y)
+    fontsize(8)
+    grid = GridRect(l_p, 110, 0)
+    for course_type_str in course_types
+        course_type_sym = Symbol(course_type_str)
+        type_text = course_types_name(course_type_sym)
+        type_text_length = length(type_text) + 95
+        sethue(clrs[course_type_sym])
+        l_p = nextgridpoint(grid)
+        circle(l_p, 6, action=:fill)
+        sethue("black")
+        text(type_text, Point(l_p.x + 5, l_p.y), halign=:left, valign=:middle)
+
+    end
 end
 

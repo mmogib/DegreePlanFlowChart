@@ -68,3 +68,16 @@ CourseTile(c::CourseTile, tiles::Vector{TileEdgePoint}, position::Symbol) = begi
     CourseTile(c.code, c.type, c.credits, c.term, c.PreReqTile, c.Note, c.Notes, c.order, c.x, c.y, c.w, c.h, c.c, tr, br, tl, bl, c.prereqs)
 end
 Base.:(==)(c1::CourseTile, c2::CourseTile) = c1.code == c2.code && c1.term == c2.term && c1.order == c2.order
+
+
+struct DPCanvas
+    lane_width::Number
+    lane_height::Number
+    x_inc::Number
+    x::Number
+    y::Number
+    sem_gap::Number
+    year_gap::Number
+    tile_h::Number
+    tile_separator::Number
+end

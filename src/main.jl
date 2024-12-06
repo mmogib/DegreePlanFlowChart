@@ -1,7 +1,5 @@
 include("includes.jl")
 
-
-
 function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true, term_field::Symbol=:Term)
     clrs = theme_colors()
     d = if isnothing(filename)
@@ -9,12 +7,10 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     else
         Drawing("A4landscape", filename)
     end
+    w, h = d.width, d.height
     df = getDSECourses(is_summer)
-    all_courses = coursesToTiles(df, d, term_field)
-    all_courses = addPreRequesites(df, all_courses)
     course_types = unique(df[!, :Type])
     origin()
-    w, h = d.width, d.height
     background("white")
     sethue("green")
     # setdash("dot")
@@ -25,41 +21,27 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     circle(Point(0, d.height / 2), 4, action=:fill)
     box(BoundingBox(), action=:stroke)
     sethue("black")
-    legend_point = Point(-w / 2 + 20, (h / 2) - 10)
-    text("Legend: J = Junior Standing ", legend_point, halign=:left, valign=:middle)
-    legend_point = Point(-w / 2 + 60, (h / 2) - 10)
-    type_text_length = 120
-    l_p = Point(legend_point.x + type_text_length, legend_point.y)
-    fontsize(8)
-    grid = GridRect(l_p, 110, 0)
-    for course_type_str in course_types
-        course_type_sym = Symbol(course_type_str)
-        type_text = course_types_name(course_type_sym)
-        type_text_length = length(type_text) + 95
-        sethue(clrs[course_type_sym])
-        l_p = nextgridpoint(grid)
-        circle(l_p, 6, action=:fill)
-        sethue("black")
-        text(type_text, Point(l_p.x + 5, l_p.y), halign=:left, valign=:middle)
-
-    end
+    draw_legends(String.(course_types), w, h)
     sethue("green")
     h = h - 20
-    banner_center = Point(0, -h / 2 + 40)
-    box(banner_center, w - 20, 50, action=:fill)
-    sethue("white")
-    fontsize(15)
-    fontface("Liberation Sans")
-    text("DATA SCIENCE AND ENGINEERING (DSE) SUMMER TRAINING PRE-REQUISITES CHART (129 CREDIT HOURS)", banner_center, halign=:center, valign=:middle)
+    dp_canvas = term_field == :Term ? DPCanvas(80, h - 100, 80, -w / 2 + 70, 40, 5, 10, 35, 70) :
+                DPCanvas(90, h - 100, 80, -w / 2 + 70, 40, 20, 25, 35, 50)
+    all_courses = coursesToTiles(df, d, dp_canvas, term_field)
+    all_courses = addPreRequesites(df, all_courses)
+    total_credits = sum(map(x -> x.credits, all_courses))
+    draw_banner(total_credits, w, h, is_summer)
     sethue("black")
 
-    y = 40
-    lane_width = 80
-    lane_height = h - 100
-    x_inc = 80
-    x = -w / 2 - 10 + x_inc
-    sem_gap = 5
-    year_gap = 10
+    y, lane_width, lane_height = dp_canvas.y, dp_canvas.lane_width, dp_canvas.lane_height
+    x_inc, x, sem_gap, year_gap = dp_canvas.x_inc, dp_canvas.x, dp_canvas.sem_gap, dp_canvas.year_gap
+    # h = lane_height
+    # y = 40
+    # lane_width = 80
+    # lane_height = h - 100
+    # x_inc = 80
+    # x = -w / 2 - 10 + x_inc
+    # sem_gap = 5
+    # year_gap = 10
 
     # year 1
     t1_crs = map(x -> (x[1], x[2]), eachrow(df[df[!, term_field].==1, [:Course, :Cr]]))
@@ -192,13 +174,12 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
         course.Note !== "" && text("($(course.Note))", Point(pt.x, pt.y + 5), halign=:center, valign=:middle)
         text(course.code, Point(pt.x, pt.y - 10), halign=:center, valign=:middle)
         fontsize(12)
-        circle(Point(pt.x + 20, pt.y + 15), 15, action=:stroke)
         text("$(course.credits)", Point(pt.x + 20, pt.y + 15), halign=:bottom, valign=:right)
         sethue(clrs[:sem_border])
         polysmooth(box(pt, course.w, course.h, vertices=true), 0.2, action=:stroke)
-        if course.code == "DATA 399"
+        if course.code in ["DATA 399", "DATA 398"]
             sethue("black")
-            pt_summer = Point(pt.x, pt.y + 140)
+            pt_summer = is_summer ? Point(pt.x, pt.y + 140) : Point(pt.x, pt.y + 180)
             polysmooth(box(pt_summer, 1.2course.w, 2course.h, vertices=true), 0.2, action=:stroke)
             fontsize(10)
             textwrap(course.PreReqTile, course.w, Point(pt_summer.x - 35, pt_summer.y - 35))
@@ -211,4 +192,4 @@ end
 
 
 
-draw_summer_chart(true, true, :Term)
+draw_summer_chart(true, true)
