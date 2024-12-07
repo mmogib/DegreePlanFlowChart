@@ -24,8 +24,8 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     draw_legends(String.(course_types), w, h)
     sethue("green")
     h = h - 20
-    dp_canvas = term_field == :Term ? DPCanvas(80, h - 100, 80, -w / 2 + 70, 40, 5, 10, 35, 70) :
-                DPCanvas(90, h - 100, 80, -w / 2 + 70, 40, 20, 25, 35, 60)
+    dp_canvas = term_field == :Term ? DPCanvas(80, h - 100, 80, -w / 2 + 70, 40, 5, 10, 35, 75) :
+                DPCanvas(90, h - 100, 80, -w / 2 + 70, 40, 20, 25, 35, 62)
     all_courses = coursesToTiles(df, d, dp_canvas, term_field)
     all_courses = addPreRequesites(df, all_courses)
     total_credits = sum(map(x -> x.credits, all_courses))
@@ -100,18 +100,30 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     down_to_up = pre_arrows_fns[:DownToUp]
     same_level = pre_arrows_fns[:SameLevel]
     up_to_down = pre_arrows_fns[:UpToDown]
+    # connector_colors = [
+    #     RGB(0.8, 0.2, 0.0),  # Dark Red
+    #     RGB(0.2, 0.0, 0.8),  # Dark Golden Orange
+    #     RGB(0.8, 0.0, 0.2),  # Dark Red Violet
+    #     RGB(0.2, 0.0, 0.8)   # Dark Burgundy
+    # ]
     connector_colors = [
-        RGB(0.8, 0.2, 0.0),  # Dark Red
-        RGB(0.2, 0.0, 0.8),  # Dark Golden Orange
-        RGB(0.8, 0.0, 0.2),  # Dark Red Violet
-        RGB(0.2, 0.0, 0.8)   # Dark Burgundy
+        colorant"#0a0c08",
+        colorant"#842bd7",  # Dark Red
+        colorant"#ff206e",  # Dark Red
+        colorant"#2c0735",  # Dark Red
+        colorant"#5e2bff",  # Dark Red
+        colorant"#2c0735",  # Dark Red
+        colorant"#ff0202",  # Dark Red
+        colorant"#ff8700",  # Dark Red
+        colorant"#7364d2",  # Dark Red
     ]
+
 
     connector_lengths = [0.9, 1.2, 0.9, 1.2]
 
     for course in all_courses
         connector_indx = 1 + (term_counter["$(course.term)"] % 4)
-        clr = connector_colors[connector_indx]
+        clr = connector_colors[term_counter["$(course.term)"]]
         lngth = connector_lengths[connector_indx]
         setline(lngth)
         sethue(clr)
@@ -179,7 +191,7 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
         polysmooth(box(pt, course.w, course.h, vertices=true), 0.2, action=:stroke)
         if course.code in ["DATA 399", "DATA 398"]
             sethue("black")
-            pt_summer = is_summer ? Point(pt.x, pt.y + 140) : Point(pt.x, pt.y + 200)
+            pt_summer = is_summer ? Point(pt.x, pt.y + 160) : Point(pt.x, pt.y + 220)
             polysmooth(box(pt_summer, 1.2course.w, 2course.h, vertices=true), 0.2, action=:stroke)
             fontsize(10)
             textwrap(course.PreReqTile, course.w, Point(pt_summer.x - 35, pt_summer.y - 35))
@@ -192,4 +204,4 @@ end
 
 
 
-draw_summer_chart(true, true)
+draw_summer_chart(output=:pdf, is_summer=false)

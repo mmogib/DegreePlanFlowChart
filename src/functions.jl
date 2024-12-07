@@ -88,7 +88,7 @@ function coursesToTiles(df::DataFrame, canvas::Drawing, dp_canvas::DPCanvas, ter
                     Float64(c_term)
                 end
                 type_clr = type_colors[Symbol(type)]
-                ytemp = y - (h / 2) + 100 + (i - 1) * tile_sep
+                ytemp = y - (h / 2) + 80 + (i - 1) * tile_sep
                 CourseTile(code, type, cr, c_term, c_pretile, c_note, c_notes, i, lane_x, ytemp, tile_w - 15, tile_h, type_clr)
             end
             lane_x = (term_feild == :Term && yr == 4) || term_i == 2 ? lane_x : lane_x + x_inc + sem_gap
@@ -127,11 +127,12 @@ function course_types_name(tp::Symbol)
     type_names[tp]
 end
 
-function draw_summer_chart(pdf::Bool, is_summer::Bool=true)
-    term_field = is_summer ? :Term : :INTERN_Term
-    if pdf
+function draw_summer_chart(; output::Symbol, is_summer::Bool)
+    charts_folder = mkpath("./charts")
+    term_field, filename = is_summer ? (:Term, "$charts_folder/FlowChartSummer.pdf") : (:INTERN_Term, "$charts_folder/FlowChartInternship.pdf")
+    if output == :pdf
         @pdf begin
-            draw_summer_chart("./flow-charts/FlowChart.pdf", is_summer, term_field)
+            draw_summer_chart(filename, is_summer, term_field)
         end
     else
         @draw begin
@@ -145,19 +146,23 @@ function semester_lane(x, y, w, h, clrs=theme_colors(), title="", courses=[], al
     sethue(clrs[:sem_title])
     credits = sum(map(x -> x[2], courses))
     # green title background
-    box(Point(x, y - h / 2 + 20), w, 40, action=:fill)
+    title_tile_center_point = Point(x, y - h / 2 + 10)
+    box(title_tile_center_point, w, 20, action=:fill)
     sethue("white")
     fontsize(14)
-    text(title, Point(x, y - h / 2 + 20), halign=:center, valign=:middle)
+    text(title, title_tile_center_point, halign=:center, valign=:middle)
 
+    credithours_tile_center_point = Point(title_tile_center_point.x, title_tile_center_point.y + 20)
     sethue("black")
     fontsize(12)
-    text("$credits cr.", Point(x, y - h / 2 + 50), halign=:center, valign=:middle)
+    text("$credits cr.", credithours_tile_center_point, halign=:center, valign=:middle)
 
+    line_below_title_start_point = Point(x - w / 2, y - h / 2 + 40)
+    line_below_title_end_point = Point(x + w / 2, y - h / 2 + 40)
     # lane
     sethue(clrs[:sem_border])
     setline(0.7)
-    line(Point(x - w / 2, y - h / 2 + 60), Point(x + w / 2, y - h / 2 + 60), action=:stroke)
+    line(line_below_title_start_point, line_below_title_end_point, action=:stroke)
     setline(0.5)
     box(Point(x, y), w, h, action=:stroke)
 
@@ -194,7 +199,7 @@ function get_fork_points(num_courses)
             y_l = if isnothing(y_level_indx)
                 y_level
             else
-                y_level - 10
+                y_level - 5
             end
             used_ys[next_indx+1] = y_l
 
@@ -217,7 +222,8 @@ function get_fork_points(num_courses)
         :SameLevel => function (course, pre_req_c)
             tr_free = filter(x -> !(x in used_corners), pre_req_c.TRPoints)[1]
             tr_order = tr_free.order
-            tl_free = filter(x -> !(x in used_corners), course.TLPoints)[1]
+            tl_frees_all = filter(x -> !(x in used_corners), course.TLPoints)
+            tl_free = length(tl_frees_all) == 3 ? tl_frees_all[1] : TileEdgePoint(course.x, course.y - course.h / 2, 1, true)
             tl_order = tl_free.order
             used_corners[used_counter] = tr_free
             used_counter += 1
@@ -230,7 +236,7 @@ function get_fork_points(num_courses)
             y_l = if isnothing(y_level_indx)
                 y_level
             else
-                y_level - 10
+                y_level - 5
             end
             used_ys[next_indx+1] = y_l
             p2 = Point(p1.x + 10, y_l)
@@ -254,7 +260,7 @@ function get_fork_points(num_courses)
             y_l = if isnothing(y_level_indx)
                 y_level
             else
-                y_level + 10
+                y_level + 15
             end
             used_ys[next_indx+1] = y_l
             p2 = Point(p1.x + 10, y_l)

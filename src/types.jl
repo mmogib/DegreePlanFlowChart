@@ -69,15 +69,31 @@ CourseTile(c::CourseTile, tiles::Vector{TileEdgePoint}, position::Symbol) = begi
 end
 Base.:(==)(c1::CourseTile, c2::CourseTile) = c1.code == c2.code && c1.term == c2.term && c1.order == c2.order
 
+"""
+Represents the layout configuration for a degree plan canvas, using vertical swimlanes to organize semester courses.
 
+# Fields
+- `lane_width::Number`: The height of a swimlane, containing the courses for a semester.
+- `lane_height::Number`: The width of a swimlane, containing the courses for a semester.
+- `x_inc::Number`: Small offset added to the x-coordinate for aligning course tiles within a lane.
+- `x::Number`: The x-coordinate of the top-left corner of the first swimlane.
+- `y::Number`: The y-coordinate of the top-left corner of the first swimlane, adjusted to accommodate a title tile.
+- `sem_gap::Number`: The vertical distance between consecutive semester swimlanes.
+- `year_gap::Number`: The vertical distance between the last semester lane of one year and the first semester lane of the next year.
+- `tile_h::Number`: The height of individual course tiles within a swimlane.
+- `tile_separator::Number`: The vertical distance between consecutive course tiles within the same swimlane.
+
+# Description
+`DPCanvas` provides the parameters needed to layout and render a degree plan flowchart. Vertical swimlanes represent semesters, with courses displayed as tiles inside these lanes. This structure ensures clarity in presenting the sequence and organization of courses across semesters and academic years.
+"""
 struct DPCanvas
-    lane_width::Number
-    lane_height::Number
-    x_inc::Number
-    x::Number
-    y::Number
-    sem_gap::Number
-    year_gap::Number
-    tile_h::Number
-    tile_separator::Number
+    lane_width::Number      # height of swimlane (containing semester courses)
+    lane_height::Number     # width of swimlane (containing semester courses)
+    x_inc::Number           # increase in x (row dirction) small offest in x
+    x::Number               # top left corner x-coordinate of the lane 
+    y::Number               # top left corner yx-coordinate of the lane after the title tile
+    sem_gap::Number         # distance between a semester lane and the next lane
+    year_gap::Number        # distance between a semester lane (end of year) and the next lane (next year)
+    tile_h::Number          # height of course tile
+    tile_separator::Number  # distance between a course tile and the next
 end
