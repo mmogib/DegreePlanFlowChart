@@ -25,7 +25,7 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
     sethue("green")
     h = h - 20
     dp_canvas = term_field == :Term ? DPCanvas(80, h - 100, 80, -w / 2 + 70, 40, 5, 10, 35, 70) :
-                DPCanvas(90, h - 100, 80, -w / 2 + 70, 40, 20, 25, 35, 50)
+                DPCanvas(90, h - 100, 80, -w / 2 + 70, 40, 20, 25, 35, 60)
     all_courses = coursesToTiles(df, d, dp_canvas, term_field)
     all_courses = addPreRequesites(df, all_courses)
     total_credits = sum(map(x -> x.credits, all_courses))
@@ -179,7 +179,7 @@ function draw_summer_chart(filename::Union{String,Nothing}, is_summer::Bool=true
         polysmooth(box(pt, course.w, course.h, vertices=true), 0.2, action=:stroke)
         if course.code in ["DATA 399", "DATA 398"]
             sethue("black")
-            pt_summer = is_summer ? Point(pt.x, pt.y + 140) : Point(pt.x, pt.y + 180)
+            pt_summer = is_summer ? Point(pt.x, pt.y + 140) : Point(pt.x, pt.y + 200)
             polysmooth(box(pt_summer, 1.2course.w, 2course.h, vertices=true), 0.2, action=:stroke)
             fontsize(10)
             textwrap(course.PreReqTile, course.w, Point(pt_summer.x - 35, pt_summer.y - 35))
