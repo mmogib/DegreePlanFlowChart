@@ -111,8 +111,8 @@ const CONNECTOR_COLOR_HEX = [
 ]
 const CONNECTOR_LENGTHS = [0.9, 1.2, 0.9, 1.2]
 const BRANCH_Y_THRESHOLD = 50
-const CONNECTOR_ALPHA = 0.6               # 0..1 transparency for connectors
-const CONNECTOR_THICKNESS_SCALE = 0.8     # scale factor for connector thickness
+const CONNECTOR_ALPHA = 1.0               # 0..1 transparency for connectors
+const CONNECTOR_THICKNESS_SCALE = 1.0    # scale factor for connector thickness
 
 const TOP_RIGHT_INCREMENTS = [14, 8, 6]
 const BOTTOM_RIGHT_INCREMENTS = [10, 12, 14]
