@@ -1,4 +1,4 @@
-# OS/editor noise
+﻿# OS/editor noise
 .DS_Store
 .idea/
 .vscode/
@@ -17,3 +17,7 @@ copies/*
 # Julia artifacts
 Manifest.toml
 .julia/
+
+# Temp files
+tmp_*.txt
+
