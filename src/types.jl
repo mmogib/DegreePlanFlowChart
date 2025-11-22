@@ -29,25 +29,25 @@ struct CourseTile
 end
 CourseTile(code::String, type::String, credits::Int, term::Float64, pre::String, note::String, notes::String, order::Int, x::Number, y::Number, w::Number, h::Number, c::Color) = begin
     TR = [
-        TileEdgePoint(x + w / 2 - 5, y - h / 2, 1, true),
+        TileEdgePoint(x + w / 2 - TILE_EDGE_OFFSET, y - h / 2, 1, true),
         TileEdgePoint(x + w / 2, y - h / 2, 2, true),
-        TileEdgePoint(x + w / 2, y - h / 2 + 5, 3, true),
+        TileEdgePoint(x + w / 2, y - h / 2 + TILE_EDGE_OFFSET, 3, true),
     ]
     BR = [
-        TileEdgePoint(x + w / 2, y + h / 2 - 5, 1, true),
+        TileEdgePoint(x + w / 2, y + h / 2 - TILE_EDGE_OFFSET, 1, true),
         TileEdgePoint(x + w / 2, y + h / 2, 2, true),
-        TileEdgePoint(x + w / 2 - 5, y + h / 2, 3, true),
+        TileEdgePoint(x + w / 2 - TILE_EDGE_OFFSET, y + h / 2, 3, true),
     ]
 
     TL = [
-        TileEdgePoint(x - w / 2 + 5, y - h / 2, 1, true),
+        TileEdgePoint(x - w / 2 + TILE_EDGE_OFFSET, y - h / 2, 1, true),
         TileEdgePoint(x - w / 2, y - h / 2, 2, true),
-        TileEdgePoint(x - w / 2, y - h / 2 + 5, 3, true),
+        TileEdgePoint(x - w / 2, y - h / 2 + TILE_EDGE_OFFSET, 3, true),
     ]
     BL = [
-        TileEdgePoint(x - w / 2 + 5, y + h / 2, 1, true),
+        TileEdgePoint(x - w / 2 + TILE_EDGE_OFFSET, y + h / 2, 1, true),
         TileEdgePoint(x - w / 2, y + h / 2, 2, true),
-        TileEdgePoint(x - w / 2, y + h / 2 - 5, 3, true),
+        TileEdgePoint(x - w / 2, y + h / 2 - TILE_EDGE_OFFSET, 3, true),
     ]
 
     CourseTile(code, type, credits, term, pre, note, notes, order, x, y, w, h, c, TR, BR, TL, BL, nothing)
