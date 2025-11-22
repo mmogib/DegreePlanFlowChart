@@ -1,4 +1,4 @@
-
+﻿
 
 function copyDegreePlanSpreadSheet(; filenameprefix = DEFAULT_FILENAME_PREFIX)
 	dp_dir = joinpath(@__DIR__, ROOT_RELATIVE)
@@ -273,13 +273,49 @@ function draw_summer_chart(filename::Union{String, Nothing}, is_summer::Bool = t
 
 	connector_lengths = CONNECTOR_LENGTHS
 
+    # Compute bus positions and draw buses (if enabled)
+    bus_x_by_term = Dict{Float64, Number}()
+    if USE_BUS_ROUTING
+        terms = sort(unique(map(c -> c.term, all_courses)))
+        for t in terms
+            xs_left = map(c -> c.x - c.w / 2, filter(c -> c.term == t, all_courses))
+            if !isempty(xs_left)
+                bus_x_by_term[t] = minimum(xs_left) - BUS_OFFSET
+            end
+        end
+        if DRAW_BUS_LINES
+            sethue(parse(Colorant, BUS_COLOR))
+            setline(BUS_LINE_WIDTH)
+            y_top = y - lane_height / 2 + SEMESTER_TITLE_HEIGHT + BUS_TOP_MARGIN
+            y_bottom = y + lane_height / 2 - BUS_BOTTOM_MARGIN
+            for t in keys(bus_x_by_term)
+                bx = bus_x_by_term[t]
+                line(Point(bx, y_top), Point(bx, y_bottom), action = :stroke)
+            end
+        end
+    end
+
 	for course in all_courses
 		connector_indx = 1 + (term_counter["$(course.term)"] % 4)
 		clr = connector_colors[term_counter["$(course.term)"]]
 		lngth = connector_lengths[connector_indx]
 		setline(lngth)
 		sethue(clr)
-		if !isnothing(course.prereqs)
+		if USE_BUS_ROUTING && !isnothing(course.prereqs)
+            ending_term = course.term
+            for pre_req_c in course.prereqs
+                sx = pre_req_c.x + pre_req_c.w / 2
+                sy = pre_req_c.y
+                tx_left = course.x - course.w / 2
+                bx_s = get(bus_x_by_term, pre_req_c.term, sx)
+                bx_t = get(bus_x_by_term, ending_term, tx_left)
+                line(Point(sx, sy), Point(bx_s, sy), action = :stroke)
+                line(Point(bx_s, sy), Point(bx_s, course.y), action = :stroke)
+                line(Point(bx_s, course.y), Point(bx_t, course.y), action = :stroke)
+                arrow(Point(bx_t, course.y), Point(tx_left, course.y))
+            end
+        end
+        if !isnothing(course.prereqs) && !USE_BUS_ROUTING
 			ending_term = course.term
 			ending_order = course.order
 			for pre_req_c in course.prereqs
