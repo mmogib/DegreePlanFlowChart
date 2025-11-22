@@ -299,8 +299,8 @@ function draw_summer_chart(filename::Union{String, Nothing}, is_summer::Bool = t
 		connector_indx = 1 + (term_counter["$(course.term)"] % 4)
 		clr = connector_colors[term_counter["$(course.term)"]]
 		lngth = connector_lengths[connector_indx]
-		setline(lngth)
-		sethue(clr)
+		setline(lngth * CONNECTOR_THICKNESS_SCALE)
+		sethue(RGBA(clr, CONNECTOR_ALPHA))
 		if USE_BUS_ROUTING && !isnothing(course.prereqs)
             ending_term = course.term
             for pre_req_c in course.prereqs
@@ -567,3 +567,4 @@ function draw_legends(course_types::Vector{String}, w::Number, h::Number)
 
 	end
 end
+

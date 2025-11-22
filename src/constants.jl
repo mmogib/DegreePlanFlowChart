@@ -111,6 +111,8 @@ const CONNECTOR_COLOR_HEX = [
 ]
 const CONNECTOR_LENGTHS = [0.9, 1.2, 0.9, 1.2]
 const BRANCH_Y_THRESHOLD = 50
+const CONNECTOR_ALPHA = 0.6               # 0..1 transparency for connectors
+const CONNECTOR_THICKNESS_SCALE = 0.8     # scale factor for connector thickness
 
 const TOP_RIGHT_INCREMENTS = [14, 8, 6]
 const BOTTOM_RIGHT_INCREMENTS = [10, 12, 14]
@@ -132,7 +134,7 @@ const CREDITS_OFFSET_X = 20
 const CREDITS_OFFSET_Y = 15
 
 # Special course note boxes
-const SPECIAL_COURSES = ["DATA 399", "DATA 398"]
+const SPECIAL_COURSES = ["ICS 399", "DATA 398"]
 const SUMMER_NOTE_Y_OFFSET = 150
 const INTERNSHIP_NOTE_Y_OFFSET = 220
 const PREQ_BOX_SCALE_W = 1.2
@@ -144,3 +146,12 @@ const PREQ_ARROW_X_FACTOR = 0.5
 
 # Types/edges
 const TILE_EDGE_OFFSET = 5
+
+# Bus routing (connector “bus + stub”)
+const USE_BUS_ROUTING = false
+const DRAW_BUS_LINES = false
+const BUS_OFFSET = 12                 # distance left of tile left edge
+const BUS_LINE_WIDTH = 0.8
+const BUS_COLOR = THEME_COLOR_RAW[:sem_border]
+const BUS_TOP_MARGIN = 0              # extra margin at top of lane when drawing bus
+const BUS_BOTTOM_MARGIN = 0           # extra margin at bottom of lane when drawing bus
