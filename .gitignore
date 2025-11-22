@@ -10,7 +10,8 @@ tmp_show.txt
 dump_functions.txt
 
 # Working copies and local data
-copies/
+copies/*
+!copies/.gitkeep
 *.xlsx
 
 # Julia artifacts
