@@ -7,8 +7,9 @@
 
 include("includes.jl")
 
-draw_summer_chart(output = :pdf, is_summer = true,
-	filenameprefix = DEFAULT_FILENAME_PREFIX,
-	data_table = DEFAULT_DATA_TABLE,
-	degree_name = DEFAULT_DEGREE_NAME,
+draw_summer_chart(output=:pdf, is_summer=true,
+    filenameprefix=DEFAULT_FILENAME_PREFIX,
+    data_table=DEFAULT_DATA_TABLE,
+    degree_name=DEFAULT_DEGREE_NAME,
+    db_file=DEFAULT_FILENAME_LOCATION
 )

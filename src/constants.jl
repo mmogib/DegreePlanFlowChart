@@ -1,14 +1,15 @@
 # Centralized constants for configuration and styling
 
 # Data and paths
-const DEFAULT_FILENAME_PREFIX = "Yazan_DegreePlan"
-const DEFAULT_DEGREE_NAME="BS-X in Internet of Things & Data Analytics"
-const DEFAULT_DATA_TABLE = "Data"
+const DEFAULT_FILENAME_PREFIX = "DSE_COURSES_DB"
+const DEFAULT_FILENAME_LOCATION = "copies/DSE_COURSES_DB_V2.xlsx"
+const DEFAULT_DEGREE_NAME = "BS in Dats Science & Engineering"
+const DEFAULT_DATA_TABLE = "DATA_LIST"
 const EXCEL_SUFFIX = "xlsx"
-const ROOT_RELATIVE = "../.."             # used with `joinpath(@__DIR__, ROOT_RELATIVE)`
+const ROOT_RELATIVE = ".."             # used with `joinpath(@__DIR__, ROOT_RELATIVE)`
 const COPIES_DIR = "./copies"
 const CHARTS_DIR = "./charts"
-const SUMMER_CHART_FILENAME = "YazanFlowChartSummer.pdf"
+const SUMMER_CHART_FILENAME = "DSEFlowChartSummer.pdf"
 const INTERNSHIP_CHART_FILENAME = "FlowChartInternship.pdf"
 
 # Canvas and scene
@@ -24,26 +25,26 @@ const SUMMER_LABEL_X_OFFSET = 1
 
 # DPCanvas presets (numbers only; main builds DPCanvas from these)
 const DPCANVAS_TERM = (
-	lane_width = 80,
-	lane_height_sub = 100,
-	x_inc = 80,
-	x_left_margin = 70,
-	y = 40,
-	sem_gap = 5,
-	year_gap = 10,
-	tile_h = 35,
-	tile_sep = 75,
+    lane_width=80,
+    lane_height_sub=100,
+    x_inc=80,
+    x_left_margin=70,
+    y=40,
+    sem_gap=5,
+    year_gap=10,
+    tile_h=35,
+    tile_sep=75,
 )
 const DPCANVAS_INTERNSHIP = (
-	lane_width = 90,
-	lane_height_sub = 100,
-	x_inc = 80,
-	x_left_margin = 70,
-	y = 40,
-	sem_gap = 20,
-	year_gap = 25,
-	tile_h = 35,
-	tile_sep = 62,
+    lane_width=90,
+    lane_height_sub=100,
+    x_inc=80,
+    x_left_margin=70,
+    y=40,
+    sem_gap=20,
+    year_gap=25,
+    tile_h=35,
+    tile_sep=62,
 )
 
 # Layout calculations
@@ -60,16 +61,16 @@ const TERM_COUNTER_REGULAR = Dict("1.0" => 1, "2.0" => 2, "3.0" => 3, "4.0" => 4
 
 # Theme colors (hex/rgba strings). Conversion to Color done at use-site.
 const THEME_COLOR_RAW = Dict(
-	:sem_border => "rgba(111,118,129,0.6)",
-	:sem_title => "#54c45e",
-	:primary => "black",
-	:secondary => "#008a0e",
-	:DF => "#F8CBAD",
-	:GS => "#C6E0B4",
-	:MS => "#FFE699",
-	:CR => "#BDD7EE",
-	:CE => "#DDEBF7",
-	:TE => "#99FFCC",
+    :sem_border => "rgba(111,118,129,0.6)",
+    :sem_title => "#54c45e",
+    :primary => "black",
+    :secondary => "#008a0e",
+    :DF => "#F8CBAD",
+    :GS => "#C6E0B4",
+    :MS => "#FFE699",
+    :CR => "#BDD7EE",
+    :CE => "#DDEBF7",
+    :TE => "#99FFCC",
 )
 
 # Fonts and sizes
@@ -99,15 +100,15 @@ const LEGEND_CIRCLE_RADIUS = 6
 
 # Connector visuals and routing
 const CONNECTOR_COLOR_HEX = [
-	"#0a0c08",
-	"#842bd7",
-	"#ff206e",
-	"#2c0735",
-	"#5e2bff",
-	"#2c0735",
-	"#ff0202",
-	"#ff8700",
-	"#7364d2",
+    "#0a0c08",
+    "#842bd7",
+    "#ff206e",
+    "#2c0735",
+    "#5e2bff",
+    "#2c0735",
+    "#ff0202",
+    "#ff8700",
+    "#7364d2",
 ]
 const CONNECTOR_LENGTHS = [0.9, 1.2, 0.9, 1.2]
 const BRANCH_Y_THRESHOLD = 50
@@ -134,7 +135,7 @@ const CREDITS_OFFSET_X = 20
 const CREDITS_OFFSET_Y = 15
 
 # Special course note boxes
-const SPECIAL_COURSES = ["ICS 399", "DATA 398"]
+const SPECIAL_COURSES = ["DATA 399", "DATA 398"]
 const SUMMER_NOTE_Y_OFFSET = 150
 const INTERNSHIP_NOTE_Y_OFFSET = 220
 const PREQ_BOX_SCALE_W = 1.2
